@@ -1,0 +1,131 @@
+<html>
+  <head>
+      <title>Node.js chat</title>
+  </head>
+
+    <!-- Latest compiled and minified CSS -->
+    <link rel="stylesheet" href="//netdna.bootstrapcdn.com/bootstrap/3.0.3/css/bootstrap.min.css">
+    <!-- Optional theme -->
+    <link rel="stylesheet" href="//netdna.bootstrapcdn.com/bootstrap/3.0.3/css/bootstrap-theme.min.css">
+    <!-- Latest compiled and minified JavaScript -->
+    <script src="//netdna.bootstrapcdn.com/bootstrap/3.0.3/js/bootstrap.min.js"></script>
+
+    <script src="https://code.jquery.com/jquery.js"></script>
+
+    <style>
+      #content{
+        display: none;
+      }
+      #chatContent{
+        float: left;
+      }
+      #chat{
+        position: relative;
+        width: 100%;
+        float: left;
+        min-height: 85%;
+        height: 70%;
+        overflow: auto;
+      }
+    </style>
+
+  <body>
+    <!-- Hello World, this is a chat built in node.js -->
+
+    <div class="container">
+      <div class="page-header">
+        <h1>Node.js Chat <small>by <a href=#>Diego Valencia</a></small></h1>
+      </div>
+
+      <div class="input-group" style="width: 300px; text-align: center; margin: 0 auto;" id="nickContainer">
+        <input type="text" id="nickname" class="form-control input-lg" placeholder="Ingrese su nombre de usuario">
+        <span class="input-group-btn">
+          <button type="submit" class="btn btn-lg btn-primary" id="setNick">Enviar</button>
+        </span>
+      </div>
+      <br>
+
+      <div class="alert fade in alert-danger alert-dismissable" data-dismiss="alert" id="nickError" style="display: none;">
+        <button type="button" class="close" id="closeAlert">x</button>
+        El nombre de usuario ya existe en este chat creado con Node-js y Socket.io
+      </div>
+
+      <div id="content" class="row" style="height: 70%;">
+        <div class="col-md-2"></div>
+        <div id="chatContent" class="col-md-6">
+          <div class="panel panel-success">
+            <div class="panel-heading">Chat Node.js y Socket.io</div>
+            <div id="chat" class="panel-body"></div>
+          </div>
+          <div>
+            <form id="sendMessage" class="input-group" style="text-align:center; margin:0 auto;">
+              <input id="message" class="form-control input-lg" type="text">
+              <span class="input-group-btn">
+                <button class="btn btn-lg btn-primary" type="submit">Enviar</button>
+              </span>
+            </form>
+          </div>
+        </div>
+
+        <div class="col-md-2">
+          <div class="panel panel-info">
+            <div class="panel-heading">Usuarios</div>
+            <div class="panel-body" id="users"></div>
+          </div>
+        </div>
+
+      </div>
+
+    </div>
+
+    <script src="/socket.io/socket.io.js"></script>
+
+    <script>
+      jQuery(function($){
+        var socket = io.connect();
+        var $messageForm = $('#sendMessage');
+        var $message = $('#message');
+        var $chat = $('#chat');
+
+        var $users = $('#users');
+        var $nickname = $('#nickname');
+        var $setNick = $('#setNick');
+
+        $setNick.click(function(e){
+          e.preventDefault();
+          socket.emit('newUser', $nickname.val(), function(data){
+            if(data){
+              $('#nickContainer').hide();
+              $('#content').show();
+            } else {
+              $('#nickError').show();
+            }
+          });
+        });
+
+        $messageForm.submit(function(e){
+          e.preventDefault();
+          if($message.val() != '') socket.emit('sendMessage', $message.val());
+          $message.val('');
+        });
+
+        socket.on('newMessage', function(data){
+          $chat.append(data.nick + ' - ' + data.msg + '<br>');
+        });
+
+        socket.on('usernames', function(data){
+          var usernamesString = "Usuarios conectados";
+          var usermname = "";
+          for(username in data){
+            usernamesString = usernamesString + username + "<br>";
+          }
+          $users.html(usernamesString);
+
+        });
+
+      });
+    </script>
+
+
+  </body>
+</html>
